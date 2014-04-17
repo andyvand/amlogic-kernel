@@ -102,10 +102,8 @@ obj-$(CONFIG_D2D3_PROCESS) += d2d3/
 
 obj-$(CONFIG_AML_REG_DEBUG) += regd/
 
-ifneq ($(wildcard $(srctree)/../hardware/arm/gpu),)
-	obj-$(CONFIG_UMP) += ../../../hardware/arm/gpu/ump/
-	obj-$(CONFIG_MALI400) += ../../../hardware/arm/gpu/mali/
-endif
+obj-$(CONFIG_UMP) += gpu/ump/
+obj-$(CONFIG_MALI400) += gpu/mali/
 
 obj-$(CONFIG_AMLOGIC_ION) += ion_dev/
 

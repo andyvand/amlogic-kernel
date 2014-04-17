@@ -6,6 +6,7 @@
 #include <dngl_stats.h>
 #include <dhd.h>
 #include <wlioctl.h>
+#include <proto/802.11.h>
 #ifdef POWER_OFF_IN_SUSPEND
 #include <wl_android.h>
 #include <bcmsdbus.h>
@@ -14,6 +15,10 @@
 
 #define FW_PATH_AUTO_SELECT 1
 extern char firmware_path[MOD_PARAM_PATHLEN];
+extern int disable_proptx;
+#ifdef POWER_OFF_IN_SUSPEND
+extern bool wifi_ready;
+#endif
 
 /* channel list */
 typedef struct wl_channel_list {
@@ -22,6 +27,12 @@ typedef struct wl_channel_list {
 	/* variable length channel list */
 	uint32 channel[WL_NUMCHANNELS];
 } wl_channel_list_t;
+
+typedef struct wmes_param {
+	int aifsn[AC_COUNT];
+	int cwmin[AC_COUNT];
+	int cwmax[AC_COUNT];
+} wme_param_t;
 
 typedef struct dhd_conf {
 	char fw_path[MOD_PARAM_PATHLEN];		/* Firmware path */
@@ -36,7 +47,11 @@ typedef struct dhd_conf {
 	int roam_delta[2];			/* Roaming candidate qualification delta */
 	int fullroamperiod;			/* Full Roaming period */
 	uint filter_out_all_packets;	/* Filter out all packets in early suspend */
-	uint keep_alive_period;		/* The perioid to send keep alive packet */
+	uint keep_alive_period;		/* The perioid in ms to send keep alive packet */
+	uint force_wme_ac;
+	wme_param_t wme;	/* WME parameters */
+	int stbc;			/* STBC for Tx/Rx */
+	int phy_oclscdenable;		/* phy_oclscdenable */
 } dhd_conf_t;
 
 void dhd_conf_set_fw_name_by_chip(dhd_pub_t *dhd, char *dst, char *src);
@@ -50,6 +65,11 @@ int dhd_conf_get_country(dhd_pub_t *dhd);
 bool dhd_conf_match_channel(dhd_pub_t *dhd, uint32 channel);
 int dhd_conf_set_roam(dhd_pub_t *dhd);
 void dhd_conf_set_bw(dhd_pub_t *dhd);
+void dhd_conf_force_wme(dhd_pub_t *dhd);
+void dhd_conf_get_wme(dhd_pub_t *dhd, edcf_acparam_t *acp);
+void dhd_conf_set_wme(dhd_pub_t *dhd);
+void dhd_conf_set_stbc(dhd_pub_t *dhd);
+void dhd_conf_set_phyoclscdenable(dhd_pub_t *dhd);
 int dhd_conf_download_config(dhd_pub_t *dhd);
 int dhd_conf_preinit(dhd_pub_t *dhd);
 int dhd_conf_attach(dhd_pub_t *dhd);
@@ -61,9 +81,11 @@ extern void *bcmsdh_get_drvdata(void);
 extern struct net_device *g_netdev;
 #if defined(CONFIG_HAS_EARLYSUSPEND)
 extern int g_wifi_on;
+#ifdef WL_CFG80211
 void wl_cfg80211_stop(void);
 void wl_cfg80211_send_disconnect(void);
 void wl_cfg80211_user_sync(bool lock);
+#endif
 #endif
 void dhd_conf_wifi_suspend(struct sdio_func *func);
 void dhd_conf_register_wifi_suspend(struct sdio_func *func);

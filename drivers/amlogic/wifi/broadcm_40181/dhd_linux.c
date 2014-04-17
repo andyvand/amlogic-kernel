@@ -2857,7 +2857,7 @@ dhd_stop(struct net_device *net)
 	int ifidx = 0;
 	dhd_info_t *dhd = *(dhd_info_t **)netdev_priv(net);
 	DHD_OS_WAKE_LOCK(&dhd->pub);
-	DHD_TRACE(("%s: Enter %p\n", __FUNCTION__, net));
+	DHD_ERROR(("%s: Enter %p\n", __FUNCTION__, net));
 
 	if (dhd->pub.up == 0) {
 		goto exit;
@@ -2918,6 +2918,8 @@ dhd_open(struct net_device *net)
 #endif
 	int ifidx;
 	int32 ret = 0;
+
+	DHD_ERROR(("%s: Enter %p\n", __FUNCTION__, net));
 
 #if defined(MULTIPLE_SUPPLICANT)
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)) && 1 && 1
@@ -4015,6 +4017,8 @@ dhd_preinit_ioctls(dhd_pub_t *dhd)
 	dhd_wl_ioctl_cmd(dhd, WLC_SET_VAR, iovbuf, sizeof(iovbuf), TRUE, 0);
 #endif /* defined(AP) && !defined(WLP2P) */
 	dhd_conf_set_bw(dhd);
+	dhd_conf_force_wme(dhd);
+	dhd_conf_set_stbc(dhd);
 
 #if defined(SOFTAP)
 	if (ap_fw_loaded == TRUE) {
@@ -4202,7 +4206,7 @@ dhd_preinit_ioctls(dhd_pub_t *dhd)
 		dhd->pktfilter[DHD_MULTICAST4_FILTER_NUM] = NULL;
 		dhd->pktfilter[DHD_MULTICAST6_FILTER_NUM] = NULL;
 		/* Add filter to pass multicastDNS packet and NOT filter out as Broadcast */
-		dhd->pktfilter[DHD_MDNS_FILTER_NUM] = "104 0 0 0 0xFFFFFFFFFFFF 0x01005E0000FB";
+		dhd->pktfilter[DHD_MDNS_FILTER_NUM] = NULL;//"104 0 0 0 0xFFFFFFFFFFFF 0x01005E0000FB";
 		/* apply APP pktfilter */
 		dhd->pktfilter[DHD_ARP_FILTER_NUM] = "105 0 0 12 0xFFFF 0x0806";
 	}
@@ -4701,7 +4705,6 @@ void dhd_detach(dhd_pub_t *dhdp)
 		if (dhdp->prot)
 			dhd_prot_detach(dhdp);
 	}
-	dhd_conf_detach(dhdp);
 
 #if defined(CONFIG_HAS_EARLYSUSPEND) && defined(DHD_USE_EARLYSUSPEND)
 	if (dhd->dhd_state & DHD_ATTACH_STATE_EARLYSUSPEND_DONE) {
@@ -4793,6 +4796,7 @@ void dhd_detach(dhd_pub_t *dhdp)
 		dhd_monitor_uninit();
 	}
 #endif
+	dhd_conf_detach(dhdp);
 
 #ifdef PNO_SUPPORT
 	if (dhdp->pno_state)
@@ -5771,7 +5775,7 @@ static void dhd_hang_process(struct work_struct *work)
 
 	if (dev) {
 		rtnl_lock();
-		dev_close(dev);
+		////dev_close(dev);		//lin : do real HANG
 		rtnl_unlock();
 #if defined(WL_WIRELESS_EXT)
 		wl_iw_send_priv_event(dev, "HANG");

@@ -83,14 +83,13 @@ obj-$(CONFIG_AM_DVB) += dvb_tv/
 obj-$(CONFIG_AM_SMARTCARD) += smartcard/
 
 obj-$(CONFIG_AM_WIFI) += wifi/
+obj-$(CONFIG_SDIO_DHD_CDC_WIFI_40181_MODULE) += wifi/broadcm_40181/
 obj-$(CONFIG_RTL8188EU) += wifi/rtl8xxx_EU/
 obj-$(CONFIG_RTL8188EU_MP) += wifi/rtl8xxx_EU_MP/
 obj-$(CONFIG_RTL8192CU) += wifi/rtl8xxx_CU/
 obj-$(CONFIG_RTL8192DU) += wifi/rtl8xxx_DU/
 obj-$(CONFIG_RTL8192EU) += wifi/rtl8192_EU/
-ifneq ($(wildcard $(srctree)/../hardware/amlogic/wifi),)
-	obj-$(CONFIG_SDIO_DHD_CDC_WIFI_40181_MODULE) += ../../../hardware/wifi/broadcom/drivers/ap6xxx/broadcm_40181/
-endif
+
 obj-y += bluetooth/
 obj-$(CONFIG_MESON_NFC) += nfc/
 

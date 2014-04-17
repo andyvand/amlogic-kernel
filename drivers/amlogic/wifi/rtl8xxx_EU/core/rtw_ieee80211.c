@@ -1357,7 +1357,7 @@ void dump_ies(u8 *buf, u32 buf_len)
 {
 	u8* pos = (u8*)buf;
 	u8 id, len;
-	
+
 	while(pos-buf<=buf_len){
 		id = *pos;
 		len = *(pos+1);
@@ -1372,7 +1372,7 @@ void dump_ies(u8 *buf, u32 buf_len)
 		#endif
 
 		pos+=(2+len);
-	}	
+	}
 }
 
 void dump_wps_ie(u8 *ie, u32 ie_len)
@@ -1383,7 +1383,7 @@ void dump_wps_ie(u8 *ie, u32 ie_len)
 
 	u8 *wps_ie;
 	uint wps_ielen;
-	
+
 	wps_ie = rtw_get_wps_ie(ie, ie_len, NULL, &wps_ielen);
 	if(wps_ie != ie || wps_ielen == 0)
 		return;
@@ -1396,7 +1396,7 @@ void dump_wps_ie(u8 *ie, u32 ie_len)
 		DBG_871X("%s ID:0x%04x, LEN:%u\n", __FUNCTION__, id, len);
 
 		pos+=(4+len);
-	}	
+	}
 }
 
 #ifdef CONFIG_P2P

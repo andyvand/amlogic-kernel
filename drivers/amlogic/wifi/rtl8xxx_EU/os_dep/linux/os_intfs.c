@@ -2505,13 +2505,6 @@ static int netdev_close(struct net_device *pnetdev)
 #endif	// CONFIG_BR_EXT
 
 #ifdef CONFIG_P2P
-#ifdef CONFIG_IOCTL_CFG80211
-	if( padapter->wdinfo.driver_interface == DRIVER_CFG80211 )
-	{
-		if(wdev_to_priv(padapter->rtw_wdev)->p2p_enabled == _TRUE)
-			wdev_to_priv(padapter->rtw_wdev)->p2p_enabled = _FALSE;
-	}
-#endif //CONFIG_IOCTL_CFG80211
 	rtw_p2p_enable(padapter, P2P_ROLE_DISABLE);
 #endif //CONFIG_P2P
 
@@ -2884,7 +2877,6 @@ int rtw_suspend_common(_adapter *padapter)
 	
 	int ret = 0;
 	_func_enter_;
-	LeaveAllPowerSaveMode(padapter);
 	
 	rtw_suspend_free_assoc_resource(padapter);
 

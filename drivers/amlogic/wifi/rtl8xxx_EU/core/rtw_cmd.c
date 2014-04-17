@@ -427,6 +427,7 @@ _func_enter_;
 _func_exit_;		
 }
 
+
 void rtw_stop_cmd_thread(_adapter *adapter)
 {
 	if(adapter->cmdThread && adapter->cmdpriv.cmdthd_running == _TRUE
@@ -471,10 +472,10 @@ _func_enter_;
 		if ((padapter->bDriverStopped == _TRUE)||(padapter->bSurpriseRemoved == _TRUE))
 		{
 			DBG_871X_LEVEL(_drv_always_, "%s: DriverStopped(%d) SurpriseRemoved(%d) break at line %d\n",
- 				__FUNCTION__, padapter->bDriverStopped, padapter->bSurpriseRemoved, __LINE__);	
+				__FUNCTION__, padapter->bDriverStopped, padapter->bSurpriseRemoved, __LINE__);
 			break;
 		}
-		
+
 		if (pcmdpriv->stop_req) {
 			DBG_871X_LEVEL(_drv_always_, FUNC_ADPT_FMT" stop_req:%u, break\n", FUNC_ADPT_ARG(padapter), pcmdpriv->stop_req);
 			break;
@@ -499,7 +500,7 @@ _next:
 		if ((padapter->bDriverStopped == _TRUE)||(padapter->bSurpriseRemoved== _TRUE))
 		{
 			DBG_871X_LEVEL(_drv_always_, "%s: DriverStopped(%d) SurpriseRemoved(%d) break at line %d\n",
- 				__FUNCTION__, padapter->bDriverStopped, padapter->bSurpriseRemoved, __LINE__);	
+				__FUNCTION__, padapter->bDriverStopped, padapter->bSurpriseRemoved, __LINE__);
 			break;
 		}
 
@@ -1486,14 +1487,14 @@ _func_enter_;
 	}
 		
 	_rtw_memcpy(psetstakey_para->addr, sta->hwaddr,ETH_ALEN);
-	
+		
 	if(check_fwstate(pmlmepriv, WIFI_STATION_STATE)){
 #ifdef CONFIG_TDLS		
 		if(sta->tdls_sta_state&TDLS_LINKED_STATE)
 			psetstakey_para->algorithm=(u8)sta->dot118021XPrivacy;
 		else
 #endif //CONFIG_TDLS
-		psetstakey_para->algorithm =(unsigned char) psecuritypriv->dot11PrivacyAlgrthm;
+			psetstakey_para->algorithm =(unsigned char) psecuritypriv->dot11PrivacyAlgrthm;
 	}else{
 		GET_ENCRY_ALGO(psecuritypriv, sta, psetstakey_para->algorithm, _FALSE);
 	}
@@ -1508,7 +1509,7 @@ _func_enter_;
 	}
 	else {
 		_rtw_memcpy(&psetstakey_para->key, &psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey, 16);
-        }
+       }
 
 	//jeff: set this becasue at least sw key is ready
 	padapter->securitypriv.busetkipkey=_TRUE;
@@ -2441,7 +2442,7 @@ u8 rtw_lps_ctrl_wk_cmd(_adapter*padapter, u8 lps_ctrl_type, u8 enqueue)
 	struct cmd_obj	*ph2c;
 	struct drvextra_cmd_parm	*pdrvextra_cmd_parm;
 	struct cmd_priv	*pcmdpriv = &padapter->cmdpriv;
-	//struct pwrctrl_priv *pwrctrlpriv = &padapter->pwrctrlpriv;
+	//struct pwrctrl_priv *pwrctrlpriv = adapter_to_pwrctl(padapter);
 	u8	res = _SUCCESS;
 	
 _func_enter_;

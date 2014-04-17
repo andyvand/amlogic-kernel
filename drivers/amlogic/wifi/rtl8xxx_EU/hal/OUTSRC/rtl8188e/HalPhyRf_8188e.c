@@ -210,7 +210,8 @@ ODM_TxPwrTrackAdjust88E(
 	{
 		ODM_RT_TRACE(pDM_Odm, ODM_COMP_TX_PWR_TRACK, ODM_DBG_LOUD, 
 		("BbSwingIdxOfdm = %d BbSwingFlagOfdm=%d\n", pDM_Odm->BbSwingIdxOfdm, pDM_Odm->BbSwingFlagOfdm));
-
+		
+		//printk("BbSwingIdxOfdm = %d BbSwingFlagOfdm=%d\n", pDM_Odm->BbSwingIdxOfdm, pDM_Odm->BbSwingFlagOfdm);
 		if (pDM_Odm->BbSwingIdxOfdm <= pDM_Odm->BbSwingIdxOfdmBase)
 		{
 			*pDirection 	= 1;
@@ -232,6 +233,7 @@ ODM_TxPwrTrackAdjust88E(
 		ODM_RT_TRACE(pDM_Odm, ODM_COMP_TX_PWR_TRACK, ODM_DBG_LOUD, 
 		("pDM_Odm->BbSwingIdxCck = %d pDM_Odm->BbSwingIdxCckBase = %d\n", pDM_Odm->BbSwingIdxCck, pDM_Odm->BbSwingIdxCckBase));
 
+		//printk("pDM_Odm->BbSwingIdxCck = %d pDM_Odm->BbSwingIdxCckBase = %d\n", pDM_Odm->BbSwingIdxCck, pDM_Odm->BbSwingIdxCckBase);
 		if (pDM_Odm->BbSwingIdxCck <= pDM_Odm->BbSwingIdxCckBase)
 		{
 			*pDirection 	= 1;
@@ -242,6 +244,7 @@ ODM_TxPwrTrackAdjust88E(
 			*pDirection 	= 2;
 			pwr_value 		= (pDM_Odm->BbSwingIdxCck - pDM_Odm->BbSwingIdxCckBase);
 		}
+		//printk("pDM_Odm->BbSwingIdxCck = %d pDM_Odm->BbSwingIdxCckBase = %d pwr_value:%d\n", pDM_Odm->BbSwingIdxCck, pDM_Odm->BbSwingIdxCckBase,pwr_value);
 	}
 
 	//
@@ -321,8 +324,8 @@ odm_TxPwrTrackSetPwr88E(
 		
 #endif
 #if (DM_ODM_SUPPORT_TYPE & ODM_AP)
-		PHY_RF6052SetCCKTxPower(pDM_Odm->priv, *(pDM_Odm->pChannel));
-		PHY_RF6052SetOFDMTxPower(pDM_Odm->priv, *(pDM_Odm->pChannel));
+			PHY_RF6052SetCCKTxPower(pDM_Odm->priv, *(pDM_Odm->pChannel));
+			PHY_RF6052SetOFDMTxPower(pDM_Odm->priv, *(pDM_Odm->pChannel));
 #endif
 		
 	} 
@@ -376,7 +379,6 @@ odm_TxPwrTrackSetPwr88E(
 }	// odm_TxPwrTrackSetPwr88E
 
 
-//091212 chiyokolin
 VOID
 odm_TXPowerTrackingCallback_ThermalMeter_8188E(
 #if (DM_ODM_SUPPORT_TYPE & ODM_AP)
@@ -432,8 +434,7 @@ odm_TXPowerTrackingCallback_ThermalMeter_8188E(
 #if (MP_DRIVER == 1)      
 #if (DM_ODM_SUPPORT_TYPE == ODM_MP)
     pDM_Odm->RFCalibrateInfo.TxPowerTrackControl = pHalData->TxPowerTrackControl; // <Kordan> We should keep updating the control variable according to HalData.
-#endif
-
+#endif 
     // <Kordan> RFCalibrateInfo.RegA24 will be initialized when ODM HW configuring, but MP configures with para files.
     pDM_Odm->RFCalibrateInfo.RegA24 = 0x090e1317; 
 #endif
@@ -463,14 +464,14 @@ odm_TXPowerTrackingCallback_ThermalMeter_8188E(
 	if(pDM_Odm->RFCalibrateInfo.ThermalValue_AVG_index == AVG_THERMAL_NUM_88E)
 		pDM_Odm->RFCalibrateInfo.ThermalValue_AVG_index = 0;
 
-				for(i = 0; i < AVG_THERMAL_NUM_88E; i++)
-				{
-					if(pDM_Odm->RFCalibrateInfo.ThermalValue_AVG[i])
-					{
-						ThermalValue_AVG += pDM_Odm->RFCalibrateInfo.ThermalValue_AVG[i];
-						ThermalValue_AVG_count++;
-					}
-				}
+	for(i = 0; i < AVG_THERMAL_NUM_88E; i++)
+	{
+		if(pDM_Odm->RFCalibrateInfo.ThermalValue_AVG[i])
+		{
+			ThermalValue_AVG += pDM_Odm->RFCalibrateInfo.ThermalValue_AVG[i];
+			ThermalValue_AVG_count++;
+		}
+	}
 
 	if(ThermalValue_AVG_count)
 	{
@@ -491,9 +492,9 @@ odm_TXPowerTrackingCallback_ThermalMeter_8188E(
 	{
 		pDM_Odm->RFCalibrateInfo.ThermalValue_LCK = ThermalValue;
 #if !(DM_ODM_SUPPORT_TYPE & ODM_AP)
-			PHY_LCCalibrate_8188E(Adapter);
+		PHY_LCCalibrate_8188E(Adapter);
 #else
-			PHY_LCCalibrate_8188E(pDM_Odm);
+		PHY_LCCalibrate_8188E(pDM_Odm);
 #endif
 	}
 
@@ -502,9 +503,9 @@ odm_TXPowerTrackingCallback_ThermalMeter_8188E(
 	if (delta > 0 && pDM_Odm->RFCalibrateInfo.TxPowerTrackControl)
 	{
 #if (DM_ODM_SUPPORT_TYPE & (ODM_MP|ODM_CE))			
-			delta = ThermalValue > pHalData->EEPROMThermalMeter?(ThermalValue - pHalData->EEPROMThermalMeter):(pHalData->EEPROMThermalMeter - ThermalValue);		
+	    delta = ThermalValue > pHalData->EEPROMThermalMeter?(ThermalValue - pHalData->EEPROMThermalMeter):(pHalData->EEPROMThermalMeter - ThermalValue);		
 #else
-			delta = (ThermalValue > pDM_Odm->priv->pmib->dot11RFEntry.ther)?(ThermalValue - pDM_Odm->priv->pmib->dot11RFEntry.ther):(pDM_Odm->priv->pmib->dot11RFEntry.ther - ThermalValue);		
+	    delta = (ThermalValue > pDM_Odm->priv->pmib->dot11RFEntry.ther)?(ThermalValue - pDM_Odm->priv->pmib->dot11RFEntry.ther):(pDM_Odm->priv->pmib->dot11RFEntry.ther - ThermalValue);		
 #endif
 
 

@@ -2040,10 +2040,10 @@ u32 build_probe_resp_p2p_ie(struct wifidirect_info *pwdinfo, u8 *pbuf)
 		RTW_PUT_BE16(p2pie + p2pielen, WPS_PDT_CID_MULIT_MEDIA);
 		p2pielen += 2;
 
-	//	OUI
-	//*(u32*) ( p2pie + p2pielen ) = cpu_to_be32( WPSOUI );
-	RTW_PUT_BE32(p2pie + p2pielen, WPSOUI);
-	p2pielen += 4;
+		//	OUI
+		//*(u32*) ( p2pie + p2pielen ) = cpu_to_be32( WPSOUI );
+		RTW_PUT_BE32(p2pie + p2pielen, WPSOUI);
+		p2pielen += 4;
 
 		//	Sub Category ID
 		//*(u16*) ( p2pie + p2pielen ) = cpu_to_be16( WPS_PDT_SCID_MEDIA_SERVER );
@@ -3975,7 +3975,6 @@ u8 *dump_p2p_attr_ch_list(u8 *p2p_ie, uint p2p_ielen, u8 *buf, u32 buf_len)
 			attr_contentlen -= (2+num_of_ch);
 		}
 
-		
 		for (j=0;j<ch_cnt;j++) {
 			if (j == 0) {
 				w_sz += snprintf(buf+w_sz, buf_len-w_sz, "%u", ch_list[j]);
@@ -4058,7 +4057,8 @@ int rtw_p2p_check_frames(_adapter *padapter, const u8 *buf, u32 len, u8 tx)
 						//pwdev_priv->provdisc_req_issued = _FALSE;
 
 						#ifdef CONFIG_CONCURRENT_MODE
-						if(check_buddy_fwstate(padapter, _FW_LINKED))
+						if(check_buddy_fwstate(padapter, _FW_LINKED)
+							|| check_buddy_fwstate(padapter, WIFI_AP_STATE))
 							rtw_cfg80211_adjust_p2pie_channel(padapter, frame_body, len-sizeof(struct rtw_ieee80211_hdr_3addr));
 						#endif
 					}
@@ -4087,7 +4087,8 @@ int rtw_p2p_check_frames(_adapter *padapter, const u8 *buf, u32 len, u8 tx)
 
 					if (!tx) {
 						#ifdef CONFIG_CONCURRENT_MODE
-						if(check_buddy_fwstate(padapter, _FW_LINKED)
+						if((check_buddy_fwstate(padapter, _FW_LINKED)
+							|| check_buddy_fwstate(padapter, WIFI_AP_STATE))
 							&& rtw_chk_p2pie_ch_list_with_buddy(padapter, frame_body, len-sizeof(struct rtw_ieee80211_hdr_3addr)) == _FALSE)
 						{
 							DBG_871X(FUNC_ADPT_FMT" ch_list has no intersect with buddy\n", FUNC_ADPT_ARG(padapter));
@@ -4104,7 +4105,8 @@ int rtw_p2p_check_frames(_adapter *padapter, const u8 *buf, u32 len, u8 tx)
 
 					if (tx) {
 						#ifdef CONFIG_CONCURRENT_MODE
-						if(check_buddy_fwstate(padapter, _FW_LINKED))
+						if(check_buddy_fwstate(padapter, _FW_LINKED)
+							|| check_buddy_fwstate(padapter, WIFI_AP_STATE))
 							rtw_cfg80211_adjust_p2pie_channel(padapter, frame_body, len-sizeof(struct rtw_ieee80211_hdr_3addr));
 						#endif
 					}
@@ -4134,7 +4136,8 @@ int rtw_p2p_check_frames(_adapter *padapter, const u8 *buf, u32 len, u8 tx)
 					if (!tx) {
 						pwdev_priv->provdisc_req_issued = _FALSE;
 						#ifdef CONFIG_CONCURRENT_MODE
-						if(check_buddy_fwstate(padapter, _FW_LINKED)
+						if((check_buddy_fwstate(padapter, _FW_LINKED)
+							|| check_buddy_fwstate(padapter, WIFI_AP_STATE))
 							&& rtw_chk_p2pie_ch_list_with_buddy(padapter, frame_body, len-sizeof(struct rtw_ieee80211_hdr_3addr)) == _FALSE)
 						{
 							DBG_871X(FUNC_ADPT_FMT" ch_list has no intersect with buddy\n", FUNC_ADPT_ARG(padapter));
@@ -4152,7 +4155,8 @@ int rtw_p2p_check_frames(_adapter *padapter, const u8 *buf, u32 len, u8 tx)
 
 					if (tx) {
 						#ifdef CONFIG_CONCURRENT_MODE
-						if(check_buddy_fwstate(padapter, _FW_LINKED))
+						if(check_buddy_fwstate(padapter, _FW_LINKED)
+							|| check_buddy_fwstate(padapter, WIFI_AP_STATE))
 							rtw_cfg80211_adjust_p2pie_channel(padapter, frame_body, len-sizeof(struct rtw_ieee80211_hdr_3addr));
 						#endif
 					}
@@ -4193,7 +4197,8 @@ int rtw_p2p_check_frames(_adapter *padapter, const u8 *buf, u32 len, u8 tx)
 
 					if (tx) {
 						#ifdef CONFIG_CONCURRENT_MODE
-						if(check_buddy_fwstate(padapter, _FW_LINKED))
+						if(check_buddy_fwstate(padapter, _FW_LINKED)
+							|| check_buddy_fwstate(padapter, WIFI_AP_STATE))
 							rtw_cfg80211_adjust_p2pie_channel(padapter, frame_body, len-sizeof(struct rtw_ieee80211_hdr_3addr));
 						#endif
 					}
@@ -4219,7 +4224,8 @@ int rtw_p2p_check_frames(_adapter *padapter, const u8 *buf, u32 len, u8 tx)
 
 					if (!tx) {
 						#ifdef CONFIG_CONCURRENT_MODE
-						if(check_buddy_fwstate(padapter, _FW_LINKED)) {
+						if(check_buddy_fwstate(padapter, _FW_LINKED)
+							|| check_buddy_fwstate(padapter, WIFI_AP_STATE)) {
 							if (op_ch != -1 && rtw_chk_p2pie_op_ch_with_buddy(padapter, frame_body, len-sizeof(struct rtw_ieee80211_hdr_3addr)) == _FALSE) {
 								DBG_871X(FUNC_ADPT_FMT" op_ch:%u has no intersect with buddy\n", FUNC_ADPT_ARG(padapter), op_ch);
 								rtw_change_p2pie_ch_list(padapter, frame_body, len-sizeof(struct rtw_ieee80211_hdr_3addr), 0);
@@ -4239,7 +4245,8 @@ int rtw_p2p_check_frames(_adapter *padapter, const u8 *buf, u32 len, u8 tx)
 
 					if (tx) {
 						#ifdef CONFIG_CONCURRENT_MODE
-						if(check_buddy_fwstate(padapter, _FW_LINKED))
+						if(check_buddy_fwstate(padapter, _FW_LINKED)
+							|| check_buddy_fwstate(padapter, WIFI_AP_STATE))
 							rtw_cfg80211_adjust_p2pie_channel(padapter, frame_body, len-sizeof(struct rtw_ieee80211_hdr_3addr));
 						#endif
 					}
@@ -4358,7 +4365,7 @@ int rtw_p2p_check_frames(_adapter *padapter, const u8 *buf, u32 len, u8 tx)
 		}	
 
 	}	
-	else 
+	else
 	{
 		DBG_871X("RTW_%s:action frame category=%d\n", (tx==_TRUE)?"TX":"RX", category);
 	}
@@ -5247,6 +5254,11 @@ int rtw_p2p_enable(_adapter *padapter, enum P2P_ROLE role)
 			return ret;
 #endif //CONFIG_INTEL_WIDI
 
+#ifdef CONFIG_IOCTL_CFG80211
+		if( padapter->wdinfo.driver_interface == DRIVER_CFG80211 )
+			wdev_to_priv(padapter->rtw_wdev)->p2p_enabled = _FALSE;
+#endif //CONFIG_IOCTL_CFG80211
+
 		if (_FAIL == rtw_pwr_wakeup(padapter)) {
 			ret = _FAIL;
 			goto exit;
@@ -5266,6 +5278,7 @@ int rtw_p2p_enable(_adapter *padapter, enum P2P_ROLE role)
 			_cancel_timer_ex( &pwdinfo->ap_p2p_switch_timer);
 			#endif
 			rtw_p2p_set_state(pwdinfo, P2P_STATE_NONE);
+			rtw_p2p_set_pre_state(pwdinfo, P2P_STATE_NONE);
 			rtw_p2p_set_role(pwdinfo, P2P_ROLE_DISABLE);
 			_rtw_memset(&pwdinfo->rx_prov_disc_info, 0x00, sizeof(struct rx_provdisc_req_info));
 		}

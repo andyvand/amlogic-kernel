@@ -204,7 +204,7 @@ SwLedBlink(
 
 	if(bStopBlinking)
 	{
-		//if( padapter->pwrctrlpriv.cpwm >= PS_STATE_S2)
+		//if(adapter_to_pwrctl(padapter)->cpwm >= PS_STATE_S2)
 		if(0)
 		{
 			SwLedOff(padapter, pLed);

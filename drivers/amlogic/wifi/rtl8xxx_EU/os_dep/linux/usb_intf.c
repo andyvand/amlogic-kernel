@@ -337,11 +337,11 @@ struct rtw_usb_drv rtl8192c_usb_drv = {
 	#ifdef CONFIG_AUTOSUSPEND	
 	.usbdrv.supports_autosuspend = 1,	
 	#endif
-	
+
 	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19))
-		.usbdrv.drvwrap.driver.shutdown = rtw_dev_shutdown,
+	.usbdrv.drvwrap.driver.shutdown = rtw_dev_shutdown,
 	#else
-		.usbdrv.driver.shutdown = rtw_dev_shutdown,
+	.usbdrv.driver.shutdown = rtw_dev_shutdown,
 	#endif
 };
 
@@ -367,11 +367,11 @@ struct rtw_usb_drv rtl8192d_usb_drv = {
 	#ifdef CONFIG_AUTOSUSPEND	
 	.usbdrv.supports_autosuspend = 1,	
 	#endif
-	
+
 	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19))
-		.usbdrv.drvwrap.driver.shutdown = rtw_dev_shutdown,
+	.usbdrv.drvwrap.driver.shutdown = rtw_dev_shutdown,
 	#else
-		.usbdrv.driver.shutdown = rtw_dev_shutdown,
+	.usbdrv.driver.shutdown = rtw_dev_shutdown,
 	#endif
 };
 static struct rtw_usb_drv *usb_drv = &rtl8192d_usb_drv;
@@ -396,11 +396,11 @@ struct rtw_usb_drv rtl8723a_usb_drv = {
 	#ifdef CONFIG_AUTOSUSPEND	
 	.usbdrv.supports_autosuspend = 1,	
 	#endif
-	
+
 	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19))
-		.usbdrv.drvwrap.driver.shutdown = rtw_dev_shutdown,
+	.usbdrv.drvwrap.driver.shutdown = rtw_dev_shutdown,
 	#else
-		.usbdrv.driver.shutdown = rtw_dev_shutdown,
+	.usbdrv.driver.shutdown = rtw_dev_shutdown,
 	#endif
 };
 
@@ -426,11 +426,11 @@ struct rtw_usb_drv rtl8188e_usb_drv = {
 	#ifdef CONFIG_AUTOSUSPEND	
 	.usbdrv.supports_autosuspend = 1,	
 	#endif
-	
+
 	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19))
-		.usbdrv.drvwrap.driver.shutdown = rtw_dev_shutdown,
+	.usbdrv.drvwrap.driver.shutdown = rtw_dev_shutdown,
 	#else
-		.usbdrv.driver.shutdown = rtw_dev_shutdown,
+	.usbdrv.driver.shutdown = rtw_dev_shutdown,
 	#endif
 };
 
@@ -1006,10 +1006,6 @@ static void rtw_suspend_wow(_adapter *padapter)
 		pwrpriv->wowlan_mode = _FALSE;
 	
 	rtw_cancel_all_timer(padapter);		
-	LeaveAllPowerSaveMode(padapter);
-
-	rtw_stop_cmd_thread(padapter);
-
 	
 	//padapter->net_closed = _TRUE;
 	//s1.
@@ -1081,6 +1077,16 @@ static int rtw_suspend(struct usb_interface *pusb_intf, pm_message_t message)
 
 	DBG_871X("==> %s (%s:%d)\n",__FUNCTION__, current->comm, current->pid);
 
+
+#ifdef CONFIG_IOL_READ_EFUSE_MAP
+	if(!padapter->bup){
+		u8 bMacPwrCtrlOn = _FALSE;
+		rtw_hal_get_hwreg(padapter, HW_VAR_APFM_ON_MAC, &bMacPwrCtrlOn);
+		if(bMacPwrCtrlOn)
+			rtw_hal_power_off(padapter);
+	}
+#endif
+
 	if((!padapter->bup) || (padapter->bDriverStopped)||(padapter->bSurpriseRemoved))
 	{
 		DBG_871X("padapter->bup=%d bDriverStopped=%d bSurpriseRemoved = %d\n",
@@ -1103,7 +1109,9 @@ static int rtw_suspend(struct usb_interface *pusb_intf, pm_message_t message)
 	#endif
 	}
 
-	pwrpriv->bInSuspend = _TRUE;		
+	pwrpriv->bInSuspend = _TRUE;
+	LeaveAllPowerSaveMode(padapter);
+	rtw_stop_cmd_thread(padapter);			
 
 	_enter_pwrlock(&pwrpriv->lock);
 #ifdef CONFIG_WOWLAN
@@ -1177,7 +1185,7 @@ static int rtw_suspend(struct usb_interface *pusb_intf, pm_message_t message)
 	pwrpriv->bInSuspend = _TRUE;		
 	rtw_cancel_all_timer(padapter);		
 	LeaveAllPowerSaveMode(padapter);
-	
+
 	rtw_stop_cmd_thread(padapter);
 
 	_enter_pwrlock(&pwrpriv->lock);
@@ -1344,7 +1352,7 @@ int rtw_resume_process(_adapter *padapter)
 #ifdef CONFIG_BT_COEXIST
 		DBG_871X("pwrpriv->bAutoResume (%x)\n",pwrpriv->bAutoResume );
 		if( _TRUE == pwrpriv->bAutoResume ){
-		pwrpriv->bInternalAutoSuspend = _FALSE;
+			pwrpriv->bInternalAutoSuspend = _FALSE;
 			pwrpriv->bAutoResume=_FALSE;
 			DBG_871X("pwrpriv->bAutoResume (%x)  pwrpriv->bInternalAutoSuspend(%x)\n",pwrpriv->bAutoResume,pwrpriv->bInternalAutoSuspend );
 		}
@@ -2093,7 +2101,7 @@ static int __init rtw_drv_entry(void)
 static void __exit rtw_drv_halt(void)
 {
 	RT_TRACE(_module_hci_intfs_c_,_drv_err_,("+rtw_drv_halt\n"));
-	DBG_871X("+rtw_drv_halt\n");
+	DBG_871X("+rtw_drv_halt\n");	
 
 	usb_drv->drv_registered = _FALSE;
 	usb_deregister(&usb_drv->usbdrv);

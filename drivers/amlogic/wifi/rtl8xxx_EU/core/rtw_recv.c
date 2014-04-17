@@ -404,9 +404,11 @@ u32 rtw_free_uc_swdec_pending_queue(_adapter *adapter)
 	union recv_frame *pending_frame;
 	while((pending_frame=rtw_alloc_recvframe(&adapter->recvpriv.uc_swdec_pending_queue))) {
 		rtw_free_recvframe(pending_frame, &adapter->recvpriv.free_recv_queue);
-		DBG_871X("%s: dequeue uc_swdec_pending_queue\n", __func__);
 		cnt++;
 	}
+
+	if (cnt)
+		DBG_871X(FUNC_ADPT_FMT" dequeue %d\n", FUNC_ADPT_ARG(adapter), cnt);
 
 	return cnt;
 }
@@ -740,6 +742,9 @@ _func_enter_;
 		rtw_free_recvframe(return_packet,&padapter->recvpriv.free_recv_queue);			
 		return_packet = NULL;
 		
+	}
+	else{
+		prxattrib->bdecrypted = _TRUE;
 	}
 	//recvframe_chkmic(adapter, precv_frame);   //move to recvframme_defrag function
 
@@ -2148,7 +2153,6 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 	u8 type;
 	u8 subtype;
 	sint retval = _SUCCESS;
-
 	struct rx_pkt_attrib *pattrib = & precv_frame->u.hdr.attrib;
 
 	u8 *ptr = precv_frame->u.hdr.rx_data;
@@ -4213,12 +4217,16 @@ int recv_func(_adapter *padapter, union recv_frame *rframe)
 	if (check_fwstate(mlmepriv, WIFI_STATION_STATE) && psecuritypriv->busetkipkey)
 	{
 		union recv_frame *pending_frame;
-		_irqL irqL;
+		int cnt = 0;
 
 		while((pending_frame=rtw_alloc_recvframe(&padapter->recvpriv.uc_swdec_pending_queue))) {
-			if (recv_func_posthandle(padapter, pending_frame) == _SUCCESS)
-				DBG_871X("%s: dequeue uc_swdec_pending_queue\n", __func__);
+			cnt++;
+			recv_func_posthandle(padapter, pending_frame);
 		}
+
+		if (cnt)
+			DBG_871X(FUNC_ADPT_FMT" dequeue %d from uc_swdec_pending_queue\n",
+				FUNC_ADPT_ARG(padapter), cnt);
 	}
 
 	ret = recv_func_prehandle(padapter, rframe);
@@ -4229,13 +4237,22 @@ int recv_func(_adapter *padapter, union recv_frame *rframe)
 		if (check_fwstate(mlmepriv, WIFI_STATION_STATE) &&
 			!IS_MCAST(prxattrib->ra) && prxattrib->encrypt>0 &&
 			(prxattrib->bdecrypted == 0 ||psecuritypriv->sw_decrypt == _TRUE) &&
-			!is_wep_enc(psecuritypriv->dot11PrivacyAlgrthm) &&
-			!psecuritypriv->busetkipkey) {
+			psecuritypriv->ndisauthtype == Ndis802_11AuthModeWPAPSK &&
+			!psecuritypriv->busetkipkey)
+		{
 			rtw_enqueue_recvframe(rframe, &padapter->recvpriv.uc_swdec_pending_queue);
-			DBG_871X("%s: no key, enqueue uc_swdec_pending_queue\n", __func__);
+			//DBG_871X("%s: no key, enqueue uc_swdec_pending_queue\n", __func__);
+
+			if (recvpriv->free_recvframe_cnt < NR_RECVFRAME/4) {
+				/* to prevent from recvframe starvation, get recvframe from uc_swdec_pending_queue to free_recvframe_cnt  */
+				rframe = rtw_alloc_recvframe(&padapter->recvpriv.uc_swdec_pending_queue);
+				if (rframe)
+					goto do_posthandle;
+			}
 			goto exit;
 		}
-		
+
+do_posthandle:
 		ret = recv_func_posthandle(padapter, rframe);
 	}
 

@@ -249,7 +249,7 @@ void rtw_hostapd_mlme_rx(_adapter *padapter, union recv_frame *precv_frame)
 
 	rtw_netif_rx(pmgnt_netdev, skb);
 
-	precv_frame->u.hdr.pkt = NULL; // set pointer to NULL before rtw_free_recvframe() if call netif_rx()
+	precv_frame->u.hdr.pkt = NULL; // set pointer to NULL before rtw_free_recvframe() if call rtw_netif_rx()
 #endif
 }
 

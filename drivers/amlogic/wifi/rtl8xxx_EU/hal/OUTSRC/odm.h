@@ -204,7 +204,7 @@ typedef struct _Dynamic_Power_Saving_
 	u1Byte		PreRFState;
 	u1Byte		CurRFState;
 
-	int		    Rssi_val_min;
+	int		    	Rssi_val_min;
 	
 	u1Byte		initialize;
 	u4Byte		Reg874,RegC70,Reg85C,RegA74;
@@ -466,6 +466,7 @@ typedef struct _ODM_Phy_Dbg_Info_
 	
 }ODM_PHY_DBG_INFO_T;
 
+
 typedef struct _ODM_Per_Pkt_Info_
 {
 	u1Byte		Rate;	
@@ -642,6 +643,7 @@ typedef enum _ODM_Common_Info_Definition
 	ODM_CMNINFO_BT_DIG,
 	ODM_CMNINFO_BT_BUSY,					//Check Bt is using or not//neil
 	ODM_CMNINFO_BT_DISABLE_EDCA,
+	ODM_CMNINFO_STATION_STATE,
 //------------CALL BY VALUE-------------//
 
 	//
@@ -669,7 +671,7 @@ typedef enum _ODM_Support_Ability_Definition
 	ODM_BB_DYNAMIC_TXPWR		= BIT2,
 	ODM_BB_FA_CNT					= BIT3,
 	ODM_BB_RSSI_MONITOR			= BIT4,
-	ODM_BB_CCK_PD					= BIT5,
+	ODM_BB_CCK_PD				= BIT5,
 	ODM_BB_ANT_DIV				= BIT6,
 	ODM_BB_PWR_SAVE				= BIT7,
 	ODM_BB_PWR_TRAIN				= BIT8,
@@ -1237,6 +1239,7 @@ typedef  struct DM_Out_Source_Dynamic_Mechanism_Structure
 	BOOLEAN			bWIFI_Direct;
 	BOOLEAN			bWIFI_Display;
 	BOOLEAN			bLinked;
+	BOOLEAN			bsta_state;
 	u1Byte			RSSI_Min;	
 	u1Byte          	InterfaceIndex; // Add for 92D  dual MAC: 0--Mac0 1--Mac1
 	BOOLEAN         	bIsMPChip;
@@ -1387,6 +1390,8 @@ typedef  struct DM_Out_Source_Dynamic_Mechanism_Structure
 	u1Byte			DefaultOfdmIndex;
 	u1Byte			DefaultCckIndex;	
 	BOOLEAN			BbSwingFlagCck;
+	
+	
 	u1Byte			*mp_mode; 
 	//
 	// ODM system resource.
@@ -1521,6 +1526,7 @@ typedef enum tag_DIG_Connect_Definition
 #define DM_MultiSTA_InitGainChangeNotify_DISCONNECT(_ADAPTER)	\
 	DM_MultiSTA_InitGainChangeNotify(DIG_MultiSTA_DISCONNECT)
 */
+
 #define		DM_DIG_THRESH_HIGH			40
 #define		DM_DIG_THRESH_LOW			35
 
@@ -1534,7 +1540,7 @@ typedef enum tag_DIG_Connect_Definition
 #define		DM_DIG_MIN_AP					0x20
 
 #define		DM_DIG_MAX_NIC_HP			0x46
-#define		DM_DIG_MIN_NIC_HP			0x2e
+#define		DM_DIG_MIN_NIC_HP				0x2e
 
 #define		DM_DIG_MAX_AP_HP				0x42
 #define		DM_DIG_MIN_AP_HP				0x30

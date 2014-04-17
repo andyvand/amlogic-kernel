@@ -311,6 +311,8 @@ _func_enter_;
 	DBG_871X("%s: Mode=%d SmartPS=%d UAPSD=%d\n", __FUNCTION__,
 			Mode, pwrpriv->smart_ps, padapter->registrypriv.uapsd_enable);
 
+	H2CSetPwrMode.AwakeInterval = 2;	//DTIM =1
+
 	switch(Mode)
 	{
 		case PS_MODE_ACTIVE:
@@ -339,8 +341,6 @@ _func_enter_;
 
 	H2CSetPwrMode.SmartPS_RLBM = (((pwrpriv->smart_ps<<4)&0xf0) | (RLBM & 0x0f));
 
-	H2CSetPwrMode.AwakeInterval = 1;
-
 	H2CSetPwrMode.bAllQueueUAPSD = padapter->registrypriv.uapsd_enable;
 
 	if(Mode > 0)
@@ -366,7 +366,6 @@ void rtl8188e_set_FwMediaStatus_cmd(PADAPTER padapter, u16 mstatus_rpt )
 	u32 reg_macid_no_link = REG_MACID_NO_LINK_0;
 	opmode = (u8) mst_rpt;
 	macid = (u8)(mst_rpt >> 8)  ;
-	
 	DBG_871X("### %s: MStatus=%x MACID=%d \n", __FUNCTION__,opmode,macid);
 	FillH2CCmd_88E(padapter, H2C_COM_MEDIA_STATUS_RPT, sizeof(mst_rpt), (u8 *)&mst_rpt);	
 
@@ -1034,7 +1033,7 @@ void rtl8188e_set_FwJoinBssReport_cmd(PADAPTER padapter, u8 mstatus)
 	BOOLEAN		bcn_valid = _FALSE;
 	u8	DLBcnCount=0;
 	u32 poll = 0;
-
+	
 _func_enter_;
 
 	DBG_871X("%s mstatus(%x)\n", __FUNCTION__,mstatus);
@@ -1476,6 +1475,7 @@ _func_enter_;
 				pwowlan_parm.gpio_index=1;
 			}
 			pwowlan_parm.gpio_duration=0;
+
 			res = FillH2CCmd_88E(padapter, H2C_COM_REMOTE_WAKE_CTRL, 3, (u8 *)&pwowlan_parm);
 		} else {
 			pwrpriv->wowlan_magic =_FALSE;

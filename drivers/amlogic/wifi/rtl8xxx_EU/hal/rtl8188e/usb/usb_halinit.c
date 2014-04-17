@@ -155,12 +155,14 @@ void rtl8188eu_interface_configure(_adapter *padapter)
 
 }
 
-static u32 rtl8188eu_InitPowerOn(_adapter *padapter)
+static u32 InitPowerOn_rtl8188eu(_adapter *padapter)
 {
 	u16 value16;
+	u8 bMacPwrCtrlOn=_FALSE;
 	// HW Power on sequence
-	HAL_DATA_TYPE	*pHalData	= GET_HAL_DATA(padapter);
-	if(_TRUE == pHalData->bMacPwrCtrlOn)
+
+	rtw_hal_get_hwreg(padapter, HW_VAR_APFM_ON_MAC, &bMacPwrCtrlOn);
+	if(bMacPwrCtrlOn == _TRUE)	
 		return _SUCCESS;
 	
 	if(!HalPwrSeqCmdParsing(padapter, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_USB_MSK, Rtl8188E_NIC_PWR_ON_FLOW))
@@ -181,7 +183,9 @@ static u32 rtl8188eu_InitPowerOn(_adapter *padapter)
 	// for SDIO - Set CR bit10 to enable 32k calibration. Suggested by SD1 Gimmy. Added by tynli. 2011.08.31.
 	
 	rtw_write16(padapter, REG_CR, value16);
-	pHalData->bMacPwrCtrlOn = _TRUE;
+
+	bMacPwrCtrlOn = _TRUE;
+	rtw_hal_set_hwreg(padapter, HW_VAR_APFM_ON_MAC, &bMacPwrCtrlOn);
 
 	return _SUCCESS;
 
@@ -842,11 +846,11 @@ _InitRetryFunction(
 	)
 {
 	u8	value8;
-	
+	//#if 0 //MAC SPEC 
 	value8 = rtw_read8(Adapter, REG_FWHW_TXQ_CTRL);
 	value8 |= EN_AMPDU_RTY_NEW;
 	rtw_write8(Adapter, REG_FWHW_TXQ_CTRL, value8);
-
+	//#endif	
 	// Set ACK timeout
 	rtw_write8(Adapter, REG_ACKTO, 0x40);
 }
@@ -1645,7 +1649,7 @@ HAL_INIT_PROFILE_TAG(HAL_INIT_STAGES_BEGIN);
 	
 
 HAL_INIT_PROFILE_TAG(HAL_INIT_STAGES_INIT_PW_ON);
-	status = rtl8188eu_InitPowerOn(Adapter);
+	status = InitPowerOn_rtl8188eu(Adapter);
 	if(status == _FAIL){
 		RT_TRACE(_module_hci_hal_init_c_, _drv_err_, ("Failed to init power on!\n"));
 		goto exit;
@@ -2038,7 +2042,7 @@ HAL_INIT_PROFILE_TAG(HAL_INIT_STAGES_INIT_HAL_DM);
 
 	//enable tx DMA to drop the redundate data of packet
 	rtw_write16(Adapter,REG_TXDMA_OFFSET_CHK, (rtw_read16(Adapter,REG_TXDMA_OFFSET_CHK) | DROP_DATA_EN));
-	
+
 HAL_INIT_PROFILE_TAG(HAL_INIT_STAGES_IQK);
 	// 2010/08/26 MH Merge from 8192CE.
 	if(pwrctrlpriv->rf_pwrstate == rf_on)
@@ -2106,8 +2110,7 @@ void _ps_close_RF(_adapter *padapter){
 }
 
 
-VOID
-CardDisableRTL8188EU(
+VOID hal_poweroff_rtl8188eu(
 	IN	PADAPTER			Adapter 
 )
 {
@@ -2115,9 +2118,13 @@ CardDisableRTL8188EU(
 	u8 	val8;
 	u16	val16;
 	u32	val32;
-	HAL_DATA_TYPE	*pHalData	= GET_HAL_DATA(Adapter);
+	 u8 bMacPwrCtrlOn=_FALSE;
 
-	RT_TRACE(COMP_INIT, DBG_LOUD, ("CardDisableRTL8188EU\n"));
+	rtw_hal_get_hwreg(Adapter, HW_VAR_APFM_ON_MAC, &bMacPwrCtrlOn);
+	if(bMacPwrCtrlOn == _FALSE)	
+		return ;
+
+	RT_TRACE(COMP_INIT, DBG_LOUD, ("%s\n",__FUNCTION__));
 
 	//Stop Tx Report Timer. 0x4EC[Bit1]=b'0
 	val8 = rtw_read8(Adapter, REG_TX_RPT_CTRL);
@@ -2184,7 +2191,8 @@ CardDisableRTL8188EU(
 	rtw_write8(Adapter, REG_GPIO_IO_SEL+1, val8|0x0F);//Reg0x43
 	rtw_write32(Adapter, REG_BB_PAD_CTRL, 0x00080808);//set LNA ,TRSW,EX_PA Pin to output mode
 #endif
-	pHalData->bMacPwrCtrlOn = _FALSE;
+	bMacPwrCtrlOn = _FALSE;
+	rtw_hal_set_hwreg(Adapter, HW_VAR_APFM_ON_MAC, &bMacPwrCtrlOn);
 	Adapter->bFWReady = _FALSE;
 }
 static void rtl8188eu_hw_power_down(_adapter *padapter)
@@ -2220,7 +2228,7 @@ u32 rtl8188eu_hal_deinit(PADAPTER Adapter)
 #endif
 	{
 		if(Adapter->hw_init_completed == _TRUE){
-			CardDisableRTL8188EU(Adapter);
+			hal_poweroff_rtl8188eu(Adapter);
 
 			if((pwrctl->bHWPwrPindetect ) && (pwrctl->bHWPowerdown))		
 				rtl8188eu_hw_power_down(Adapter);
@@ -4170,6 +4178,7 @@ _func_enter_;
 			break;
 		case HW_VAR_DM_FLAG:
 			podmpriv->SupportAbility = *((u8 *)val);
+			//DBG_871X("HW_VAR_DM_FLAG ==> SupportAbility:0x%08x \n",podmpriv->SupportAbility );
 			break;
 		case HW_VAR_DM_FUNC_OP:
 			if(val[0])
@@ -4180,6 +4189,10 @@ _func_enter_;
 			{// restore dm flag
 				podmpriv->SupportAbility = podmpriv->BK_SupportAbility;
 			}
+			//DBG_871X("HW_VAR_DM_FUNC_OP ==> %s SupportAbility:0x%08x \n",
+			//	(val[0]==1)?"Save":"Restore",
+			//	podmpriv->SupportAbility
+			//	);
 			break;
 		case HW_VAR_DM_FUNC_SET:
 			if(*((u32 *)val) == DYNAMIC_ALL_FUNC_ENABLE){
@@ -4189,6 +4202,7 @@ _func_enter_;
 			else{
 				podmpriv->SupportAbility |= *((u32 *)val);
 			}
+			//DBG_871X("HW_VAR_DM_FUNC_SET ==> SupportAbility:0x%08x \n",podmpriv->SupportAbility );
 			break;
 		case HW_VAR_DM_FUNC_CLR:
 			podmpriv->SupportAbility &= *((u32 *)val);
@@ -4430,7 +4444,7 @@ _func_enter_;
 			break;
 #endif //CONFIG_TDLS
 		case HW_VAR_INITIAL_GAIN:
-			{				
+			{
 				DIG_T	*pDigTable = &podmpriv->DM_DigTable;					
 				u32 		rx_gain = ((u32 *)(val))[0];
 		
@@ -4526,6 +4540,7 @@ _func_enter_;
 			}
 			break;
 		case HW_VAR_CHECK_TXBUF:
+
 #ifdef CONFIG_CONCURRENT_MODE				
 			{
 				int i;
@@ -4580,7 +4595,7 @@ _func_enter_;
 					SetFwRelatedForWoWLAN8188ES(Adapter, _TRUE);
 
 					//Set Pattern
-					//if(Adapter->pwrctrlpriv.wowlan_pattern==_TRUE)
+					//if(adapter_to_pwrctl(Adapter)->wowlan_pattern==_TRUE)
 					//	rtw_wowlan_reload_pattern(Adapter);
 
 					//RX DMA stop
@@ -4780,7 +4795,7 @@ GetHalDefVar8188EUsb(
 	struct dm_priv	*pdmpriv = &pHalData->dmpriv;
 	DM_ODM_T 		*podmpriv = &pHalData->odmpriv;
 	u8			bResult = _SUCCESS;
-
+	
 	switch(eVariable)
 	{
 		case HAL_DEF_UNDERCORATEDSMOOTHEDPWDB:
@@ -5294,7 +5309,9 @@ _func_enter_;
 	//_rtw_memset(padapter->HalData, 0, sizeof(HAL_DATA_TYPE));
 	padapter->hal_data_sz = sizeof(HAL_DATA_TYPE);
 
-	pHalFunc->hal_power_on = rtl8188eu_InitPowerOn;
+	pHalFunc->hal_power_on = InitPowerOn_rtl8188eu;
+	pHalFunc->hal_power_off = hal_poweroff_rtl8188eu;
+		
 	pHalFunc->hal_init = &rtl8188eu_hal_init;
 	pHalFunc->hal_deinit = &rtl8188eu_hal_deinit;
 

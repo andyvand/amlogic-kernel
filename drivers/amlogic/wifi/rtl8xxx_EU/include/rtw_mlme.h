@@ -414,6 +414,7 @@ struct mlme_priv {
 	u8	assoc_bssid[6];
 
 	struct wlan_network	cur_network;
+	struct wlan_network *cur_network_scanned;
 #ifdef CONFIG_ARP_KEEP_ALIVE
 	// for arp offload keep alive
 	u8	gw_mac_addr[6];
@@ -743,6 +744,7 @@ __inline static void up_scanned_network(struct mlme_priv *pmlmepriv)
 #ifdef CONFIG_CONCURRENT_MODE
 sint rtw_buddy_adapter_up(_adapter *padapter);
 sint check_buddy_fwstate(_adapter *padapter, sint state);
+u8 rtw_get_buddy_bBusyTraffic(_adapter *padapter);
 #endif //CONFIG_CONCURRENT_MODE
 
 __inline static void down_scanned_network(struct mlme_priv *pmlmepriv)
@@ -769,6 +771,8 @@ extern void rtw_disconnect_hdl_under_linked(_adapter* adapter, struct sta_info *
 extern void rtw_generate_random_ibss(u8 *pibss);
 extern struct wlan_network* rtw_find_network(_queue *scanned_queue, u8 *addr);
 extern struct wlan_network* rtw_get_oldest_wlan_network(_queue *scanned_queue);
+struct wlan_network *_rtw_find_same_network(_queue *scanned_queue, struct wlan_network *network);
+struct wlan_network *rtw_find_same_network(_queue *scanned_queue, struct wlan_network *network);
 
 extern void rtw_free_assoc_resources(_adapter* adapter, int lock_scanned_queue);
 extern void rtw_indicate_disconnect(_adapter* adapter);

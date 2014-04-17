@@ -20,6 +20,8 @@
 //***** temporarily flag *******
 
 //#define CONFIG_DISABLE_ODM
+//#define CONFIG_ATMEL_RC_PATCH
+
 #define CONFIG_ODM_REFRESH_RAMASK
 #define CONFIG_PHY_SETTING_WITH_ODM
 //for FPGA VERIFICATION config
@@ -117,7 +119,7 @@
 		#define CONFIG_TSF_RESET_OFFLOAD 			// For 2 PORT TSF SYNC.
 	#endif
 
-	//#define CONFIG_IOL
+	#define CONFIG_IOL
 //#else 	//#ifndef CONFIG_MP_INCLUDED
 	
 //#endif 	//#ifndef CONFIG_MP_INCLUDED
@@ -152,7 +154,7 @@
 	//#define CONFIG_DBG_P2P
 
 	#define CONFIG_P2P_PS
-	//#define CONFIG_P2P_IPS
+	#define CONFIG_P2P_IPS
 	#define P2P_OP_CHECK_SOCIAL_CH
 #endif
 

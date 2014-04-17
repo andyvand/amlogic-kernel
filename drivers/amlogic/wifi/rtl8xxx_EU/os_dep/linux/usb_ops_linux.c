@@ -512,7 +512,7 @@ _func_enter_;
 			pxmitbuf->flags = MGT_QUEUE_INX;
 			break;
 	}
-		
+
 	_exit_critical(&pxmitpriv->lock, &irqL);
 
 	#ifdef DBG_TRX_STA_PKTS

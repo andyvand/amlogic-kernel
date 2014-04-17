@@ -152,10 +152,25 @@
 #endif
 
 #define CONFIG_IPS
+
 #define CONFIG_LPS
 #if defined(CONFIG_LPS) && defined(CONFIG_SDIO_HCI)
 #define CONFIG_LPS_LCLK
+
+	#define CONFIG_LPS_RPWM_TIMER
+	#ifdef CONFIG_LPS_RPWM_TIMER
+	#define LPS_RPWM_WAIT_MS 300
+	#endif
 #endif
+
+#ifdef CONFIG_LPS_LCLK
+//#define CONFIG_DETECT_CPWM_BY_POLLING
+#endif
+
+#ifdef CONFIG_DETECT_CPWM_BY_POLLING
+#define CONFIG_USING_CMD52_READ_INT /*for cmd53 I/O fail issue,read 0x18 only*/
+#endif
+
 
 #ifdef CONFIG_MAC_LOOPBACK_DRIVER
 #undef CONFIG_AP_MODE
@@ -254,8 +269,7 @@
 #endif
 
 #define CONFIG_80211D
-//#define CONFIG_USING_CMD52_READ_INT /*for cmd53 I/O fail issue*/
-//#define CONFIG_DETECT_CPWM_BY_POLLING
+
 
 
 /*

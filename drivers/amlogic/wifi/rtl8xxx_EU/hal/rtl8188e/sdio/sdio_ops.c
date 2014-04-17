@@ -792,7 +792,7 @@ s32 _sdio_local_read(
 		return err;
 	}
 
-        n = RND4(cnt);
+       n = RND4(cnt);
 	ptmpbuf = (u8*)rtw_malloc(n);
 	if(!ptmpbuf)
 		return (-1);
@@ -1596,6 +1596,11 @@ void sd_int_dpc(PADAPTER padapter)
 	{
 		struct reportpwrstate_parm report;
 
+#ifdef CONFIG_LPS_RPWM_TIMER
+		u8 bcancelled;
+		_cancel_timer(&(adapter_to_pwrctl(padapter)->pwr_rpwm_timer), &bcancelled);
+#endif // CONFIG_LPS_RPWM_TIMER
+
 #ifdef CONFIG_USING_CMD52_READ_INT
 		report.state = SdioLocalCmd52Read1Byte(padapter,SDIO_REG_HCPWM1);
 #else //CONFIG_USING_CMD52_READ_INT
@@ -1747,14 +1752,24 @@ void sd_int_dpc(PADAPTER padapter)
 		struct recv_buf *precvbuf;
 #ifdef CONFIG_USING_CMD52_READ_INT
 		u32 hisr;
+		u8 data[4];
 
 		//DBG_8192C("%s: RX Request, size=%d\n", __func__, phal->SdioRxFIFOSize);
 		pHalData->sdio_hisr ^= SDIO_HISR_RX_REQUEST;
+		
 #ifdef CONFIG_MAC_LOOPBACK_DRIVER
 		sd_recv_loopback(padapter, pHalData->SdioRxFIFOSize);
 #else
+		_sdio_local_read(padapter, SDIO_REG_RX0_REQ_LEN, 4, data);
+		pHalData->SdioRxFIFOSize = le16_to_cpu(*(u16*)data);
+		
 		do {
-			pHalData->SdioRxFIFOSize = SdioLocalCmd52Read2Byte(padapter, SDIO_REG_RX0_REQ_LEN);
+			//pHalData->SdioRxFIFOSize = SdioLocalCmd52Read2Byte(padapter, SDIO_REG_RX0_REQ_LEN);
+
+			if(pHalData->SdioRxFIFOSize == 0){				
+				_sdio_local_read(padapter, SDIO_REG_RX0_REQ_LEN, 4, data);
+				pHalData->SdioRxFIFOSize = le16_to_cpu(*(u16*)data);					
+			}
 
 			if(pHalData->SdioRxFIFOSize != 0)
 			{
@@ -1769,15 +1784,10 @@ void sd_int_dpc(PADAPTER padapter)
 			}
 			else
 			{
-				DBG_871X("%s, WARNING!!, SdioRxFIFOSize = 0!!\n", __func__);
+				//DBG_871X("%s, WARNING!!, SdioRxFIFOSize = 0!!\n", __func__);
 				break;
 			}
 			
-			hisr = 0;
-			ReadInterrupt8188ESdio(padapter, &hisr);
-			hisr &= SDIO_HISR_RX_REQUEST;
-			if (!hisr)
-				break;
 #ifdef CONFIG_SDIO_DISABLE_RXFIFO_POLLING_LOOP			
 		} while (0);
 #else
@@ -1814,8 +1824,10 @@ void sd_int_dpc(PADAPTER padapter)
 				else
 					break;
 			}
-			else
+			else{
+
 				break;
+			}
 #ifdef CONFIG_SDIO_DISABLE_RXFIFO_POLLING_LOOP			
 		} while (0);
 #else
@@ -1836,7 +1848,8 @@ void sd_int_hdl(PADAPTER padapter)
 
 #ifdef CONFIG_USING_CMD52_READ_INT
 	pHalData->sdio_hisr = 0;
-	ReadInterrupt8188ESdio(padapter, &pHalData->sdio_hisr);
+	//ReadInterrupt8188ESdio(padapter, &pHalData->sdio_hisr);
+	pHalData->sdio_hisr = SdioLocalCmd52Read1Byte(padapter, SDIO_REG_HISR);
 #else //CONFIG_USING_CMD52_READ_INT
 	_sdio_local_read(padapter, SDIO_REG_HISR, 6, data);
 	pHalData->sdio_hisr = le32_to_cpu(*(u32*)data);

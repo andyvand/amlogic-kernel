@@ -1002,16 +1002,17 @@ s32 rtl8188e_FirmwareDownload(PADAPTER padapter)
 		rtStatus = _WriteFW(padapter, pFirmwareBuf, FirmwareLen);
 
 		if(rtStatus == _SUCCESS || padapter->bDriverStopped || padapter->bSurpriseRemoved
-			||(rtw_get_passing_time_ms(fwdl_start_time) > 500 && writeFW_retry++ >= 3)
+			||(writeFW_retry++ >= 3 && rtw_get_passing_time_ms(fwdl_start_time) > 500)
 		)
 			break;
-	}	
-	DBG_871X("%s writeFW_retry:%u, time after fwdl_start_time:%ums\n", __FUNCTION__
-			, writeFW_retry
-			, rtw_get_passing_time_ms(fwdl_start_time)
-		);
-		
+	}
 	_FWDownloadEnable(padapter, _FALSE);
+
+	DBG_871X("%s writeFW_retry:%u, time after fwdl_start_time:%ums\n", __FUNCTION__
+		, writeFW_retry
+		, rtw_get_passing_time_ms(fwdl_start_time)
+	);
+
 	if(_SUCCESS != rtStatus){
 		DBG_871X("DL Firmware failed!\n");
 		goto Exit;
@@ -1113,6 +1114,7 @@ _func_enter_;
 		rtw_mfree(padapter->HalData, sizeof(HAL_DATA_TYPE));
 		padapter->HalData = NULL;
 	}
+	
 _func_exit_;
 }
 
@@ -3469,7 +3471,7 @@ Hal_ReadTxPowerInfo88E(
 	}
 
 	
-	// 2010/10/19 MH Add Regulator recognize for CU.
+	// 2010/10/19 MH Add Regulator recognize for EU.
 	if(!AutoLoadFail)
 	{
 		struct registry_priv  *registry_par = &padapter->registrypriv;
@@ -3795,5 +3797,4 @@ void SetBcnCtrlReg(
 
 	rtw_write8(padapter, REG_BCN_CTRL, (u8)pHalData->RegBcnCtrlVal);
 }
-
 

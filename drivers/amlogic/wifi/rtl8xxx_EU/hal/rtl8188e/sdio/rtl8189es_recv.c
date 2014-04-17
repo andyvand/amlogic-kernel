@@ -365,10 +365,7 @@ static void rtl8188es_recv_tasklet(void *priv)
 			// fix Hardware RX data error, drop whole recv_buffer
 			if ((!(pHalData->ReceiveConfig & RCR_ACRC32)) && pattrib->crc_err)
 			{
-				if (padapter->registrypriv.mp_mode == 1)
-					padapter->mppriv.rx_crcerrpktcount++;
-				else
-					DBG_8192C("%s()-%d: RX Warning! rx CRC ERROR !!\n", __FUNCTION__, __LINE__);
+				DBG_8192C("%s()-%d: RX Warning! rx CRC ERROR !!\n", __FUNCTION__, __LINE__);
 				rtw_free_recvframe(precvframe, &precvpriv->free_recv_queue);
 				break;
 			}
@@ -388,7 +385,16 @@ static void rtl8188es_recv_tasklet(void *priv)
 
 			if ((pattrib->crc_err) || (pattrib->icv_err))
 			{
-				if (padapter->registrypriv.mp_mode == 0)
+				#ifdef CONFIG_MP_INCLUDED
+				if (padapter->registrypriv.mp_mode == 1)
+				{
+					if ((check_fwstate(&padapter->mlmepriv, WIFI_MP_STATE) == _TRUE))//&&(padapter->mppriv.check_mp_pkt == 0))
+					{
+						if (pattrib->crc_err == 1)
+							padapter->mppriv.rx_crcerrpktcount++;
+					}
+				}
+				#endif
 				DBG_8192C("%s: crc_err=%d icv_err=%d, skip!\n", __FUNCTION__, pattrib->crc_err, pattrib->icv_err);
 				rtw_free_recvframe(precvframe, &precvpriv->free_recv_queue);
 			}
@@ -714,12 +720,8 @@ static void rtl8188es_recv_tasklet(void *priv)
 #endif
 			// fix Hardware RX data error, drop whole recv_buffer
 			if ((!(pHalData->ReceiveConfig & RCR_ACRC32)) && pattrib->crc_err)
-			{
-
-				if (padapter->registrypriv.mp_mode == 1)
-					padapter->mppriv.rx_crcerrpktcount++;
-				else
-					DBG_8192C("%s()-%d: RX Warning! rx CRC ERROR !!\n", __FUNCTION__, __LINE__);
+			{	
+				DBG_8192C("%s()-%d: RX Warning! rx CRC ERROR !!\n", __FUNCTION__, __LINE__);
 				rtw_free_recvframe(precvframe, &precvpriv->free_recv_queue);
 				break;
 			}
@@ -734,7 +736,17 @@ static void rtl8188es_recv_tasklet(void *priv)
 
 			if ((pattrib->crc_err) || (pattrib->icv_err))
 			{
-				if (padapter->registrypriv.mp_mode == 0)
+				#ifdef CONFIG_MP_INCLUDED
+				if (padapter->registrypriv.mp_mode == 1)
+				{
+					if ((check_fwstate(&padapter->mlmepriv, WIFI_MP_STATE) == _TRUE))//&&(padapter->mppriv.check_mp_pkt == 0))
+					{
+						if (pattrib->crc_err == 1)
+							padapter->mppriv.rx_crcerrpktcount++;
+					}
+				}
+				#endif
+
 				DBG_8192C("%s: crc_err=%d icv_err=%d, skip!\n", __FUNCTION__, pattrib->crc_err, pattrib->icv_err);
 				rtw_free_recvframe(precvframe, &precvpriv->free_recv_queue);
 			}

@@ -1338,7 +1338,7 @@ static void construct_ctr_preload(
 _func_enter_;		
     for (i=0; i<16; i++) ctr_preload[i] = 0x00;
     i = 0;
-
+	
     ctr_preload[0] = 0x01;                                  /* flag */
     if (qc_exists && a4_exists) 
 		ctr_preload[1] = mpdu[30] & 0x0f;   /* QoC_Control */
@@ -1629,7 +1629,7 @@ _func_enter_;
 		{
 			DBG_871X("%s, call rtw_get_stainfo()\n", __func__);
 			stainfo=rtw_get_stainfo(&padapter->stapriv ,&pattrib->ra[0] );
-		}	
+		}
 		
 		if (stainfo!=NULL){
 
@@ -2000,15 +2000,46 @@ _func_enter_;
 
 			if(IS_MCAST(prxattrib->ra))
 			{
+				static u32 start = 0;
+				static u32 no_gkey_bc_cnt = 0;
+				static u32 no_gkey_mc_cnt = 0;
+
 				//in concurrent we should use sw descrypt in group key, so we remove this message			
 				//DBG_871X("rx bc/mc packets, to perform sw rtw_aes_decrypt\n");
 				//prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey;
 				if(psecuritypriv->binstallGrpkey==_FALSE)
 				{
-					res=_FAIL;				
-					DBG_8192C("%s:rx bc/mc packets,but didn't install group key!!!!!!!!!!\n",__FUNCTION__);
+					res=_FAIL;
+
+					if (start == 0)
+						start = rtw_get_current_time();
+
+					if (is_broadcast_mac_addr(prxattrib->ra))
+						no_gkey_bc_cnt++;
+					else
+						no_gkey_mc_cnt++;
+
+					if (rtw_get_passing_time_ms(start) > 1000) {
+						if (no_gkey_bc_cnt || no_gkey_mc_cnt) {
+							DBG_871X_LEVEL(_drv_always_, FUNC_ADPT_FMT" no_gkey_bc_cnt:%u, no_gkey_mc_cnt:%u\n",
+								FUNC_ADPT_ARG(padapter), no_gkey_bc_cnt, no_gkey_mc_cnt);
+						}
+						start = rtw_get_current_time();
+						no_gkey_bc_cnt = 0;
+						no_gkey_mc_cnt = 0;
+					}
+
 					goto exit;
 				}
+
+				if (no_gkey_bc_cnt || no_gkey_mc_cnt) {
+					DBG_871X_LEVEL(_drv_always_, FUNC_ADPT_FMT" gkey installed. no_gkey_bc_cnt:%u, no_gkey_mc_cnt:%u\n",
+						FUNC_ADPT_ARG(padapter), no_gkey_bc_cnt, no_gkey_mc_cnt);
+				}
+				start = 0;
+				no_gkey_bc_cnt = 0;
+				no_gkey_mc_cnt = 0;
+
 				prwskey = psecuritypriv->dot118021XGrpKey[prxattrib->key_index].skey;
 				if(psecuritypriv->dot118021XGrpKeyid != prxattrib->key_index)
 				{
@@ -2022,9 +2053,31 @@ _func_enter_;
 			{
 				prwskey=&stainfo->dot118021x_UncstKey.skey[0];
 			}
-	
+			
 			length= ((union recv_frame *)precvframe)->u.hdr.len-prxattrib->hdrlen-prxattrib->iv_len;
-				
+			/*// add for CONFIG_IEEE80211W, debug
+			if(0)
+			printk("@@@@@@@@@@@@@@@@@@ length=%d, prxattrib->hdrlen=%d, prxattrib->pkt_len=%d \n"
+			, length, prxattrib->hdrlen, prxattrib->pkt_len);
+			if(0)
+			{
+				int no;
+				//test print PSK
+				printk("PSK key below:\n");
+				for(no=0;no<16;no++)
+					printk(" %02x ", prwskey[no]);
+				printk("\n");
+			}
+			if(0)
+			{
+				int no;
+				//test print PSK
+				printk("frame:\n");
+				for(no=0;no<prxattrib->pkt_len;no++)
+					printk(" %02x ", pframe[no]);
+				printk("\n");
+			}*/
+
 			res= aes_decipher(prwskey,prxattrib->hdrlen,pframe, length);
 
 

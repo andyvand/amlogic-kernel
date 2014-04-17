@@ -28,9 +28,6 @@
 #include <linux/earlysuspend.h>
 #endif //CONFIG_HAS_EARLYSUSPEND
 
-#ifdef CONFIG_LPS_LCLK
-	#define LPS_RPWM_WAIT_MS 30
-#endif
 
 #define FW_PWR0	0	
 #define FW_PWR1 	1

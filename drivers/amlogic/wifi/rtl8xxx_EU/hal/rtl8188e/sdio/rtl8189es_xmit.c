@@ -678,6 +678,7 @@ static u8 rtl8188es_query_tx_freepage(_adapter *padapter, struct xmit_buf *pxmit
 			break;
 		}
 		
+		
 		// The number of page which public page is included is available .
 		if ((pHalData->SdioTxFIFOFreePage[PageIdx]+pHalData->SdioTxFIFOFreePage[PUBLIC_QUEUE_IDX]) > (TxRequiredPageNum+1)) {
 			DedicatedPgNum = pHalData->SdioTxFIFOFreePage[PageIdx];
@@ -1269,7 +1270,6 @@ static s32 xmit_xmitframes(PADAPTER padapter, struct xmit_priv *pxmitpriv)
 	s32 ret;
 	int inx[4];
 
-
 	err = 0;
 	hwxmits = pxmitpriv->hwxmits;
 	hwentry = pxmitpriv->hwxmit_entry;
@@ -1313,6 +1313,7 @@ static s32 xmit_xmitframes(PADAPTER padapter, struct xmit_priv *pxmitpriv)
 			while (rtw_end_of_queue_search(frame_phead, frame_plist) == _FALSE)
 			{
 				pxmitframe = LIST_CONTAINOR(frame_plist, struct xmit_frame, list);				
+		
 				// check xmit_buf size enough or not
 				#ifdef CONFIG_TX_EARLY_MODE		
 				txlen = TXDESC_SIZE +EARLY_MODE_INFO_SIZE+ rtw_wlan_pkt_size(pxmitframe);

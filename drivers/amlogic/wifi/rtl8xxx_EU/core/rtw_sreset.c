@@ -234,6 +234,7 @@ void sreset_restore_network_station(_adapter *padapter)
 	sreset_restore_security_station(padapter);
 }
 
+
 void sreset_restore_network_status(_adapter *padapter)
 {
 	struct mlme_priv *mlmepriv = &padapter->mlmepriv;

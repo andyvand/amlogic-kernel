@@ -269,7 +269,7 @@ static u8 _CardEnable(PADAPTER padapter)
 	
 }
 
-static u32 rtl8188es_InitPowerOn(PADAPTER padapter)
+static u32 InitPowerOn_rtl8188es(PADAPTER padapter)
 {
 	u8 value8;
 	u16 value16;
@@ -1157,7 +1157,7 @@ HAL_INIT_PROFILE_TAG(HAL_INIT_STAGES_BEGIN);
 #endif //CONFIG_WOWLAN
 
 HAL_INIT_PROFILE_TAG(HAL_INIT_STAGES_INIT_PW_ON);
-	ret = rtl8188es_InitPowerOn(padapter);
+	ret = InitPowerOn_rtl8188es(padapter);
 	if (_FAIL == ret) {
 		RT_TRACE(_module_hci_hal_init_c_, _drv_err_, ("Failed to init Power On!\n"));
 		goto exit;
@@ -1166,7 +1166,7 @@ HAL_INIT_PROFILE_TAG(HAL_INIT_STAGES_INIT_PW_ON);
 	ret = PowerOnCheck(padapter);
 	if (_FAIL == ret ) {
 		DBG_871X("Power on Fail! do it again\n");
-		ret = rtl8188es_InitPowerOn(padapter);
+		ret = InitPowerOn_rtl8188es(padapter);
 		if (_FAIL == ret) {
 			DBG_871X("Failed to init Power On!\n");
 			goto exit;
@@ -1374,8 +1374,8 @@ HAL_INIT_PROFILE_TAG(HAL_INIT_STAGES_MISC02);
 #ifdef CONFIG_CHECK_AC_LIFETIME
 	// Enable lifetime check for the four ACs
 	rtw_write8(padapter, REG_LIFETIME_EN, 0x0F);
-#endif	// CONFIG_CHECK_AC_LIFETIME
-
+#endif	// CONFIG_CHECK_AC_LIFETIME	
+	
 #ifdef CONFIG_TX_MCAST2UNI
 	rtw_write16(padapter, REG_PKT_VO_VI_LIFE_TIME, 0x0400);	// unit: 256us. 256ms
 	rtw_write16(padapter, REG_PKT_BE_BK_LIFE_TIME, 0x0400);	// unit: 256us. 256ms
@@ -1650,16 +1650,22 @@ HAL_INIT_PROFILE_TAG(HAL_INIT_STAGES_END);
 	
 }
 
-static void CardDisableRTL8188ESdio(PADAPTER padapter)
+static void hal_poweroff_rtl8188es(PADAPTER padapter)
 {
 	u8		u1bTmp;
 	u16		u2bTmp;
 	u32		u4bTmp;
 	u8		bMacPwrCtrlOn;
 	u8		ret;
+	
 #ifdef CONFIG_PLATFORM_SPRD
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
 #endif //CONFIG_PLATFORM_SPRD	
+
+	rtw_hal_get_hwreg(padapter, HW_VAR_APFM_ON_MAC, &bMacPwrCtrlOn);
+	if(bMacPwrCtrlOn == _FALSE)	
+		return ;
+	
 
 	DBG_871X("=>%s\n", __FUNCTION__);
 
@@ -1770,7 +1776,7 @@ static u32 rtl8188es_hal_deinit(PADAPTER padapter)
 	DBG_871X("=>%s\n", __FUNCTION__);
 
 	if (padapter->hw_init_completed == _TRUE)
-		CardDisableRTL8188ESdio(padapter);
+		hal_poweroff_rtl8188es(padapter);
 	
 	DBG_871X("<=%s\n", __FUNCTION__);
 
@@ -3716,6 +3722,9 @@ _func_enter_;
 		case HW_VAR_C2HEVT_MSG_NORMAL:
 			*val =  rtw_read8(padapter, REG_C2HEVT_MSG_NORMAL);
 			break;
+		case HW_VAR_SYS_CLKR:
+			*val = rtw_read8(padapter, REG_SYS_CLKR);
+			break;
 		default:
 			break;
 	}
@@ -4156,7 +4165,9 @@ _func_enter_;
 
 	padapter->hal_data_sz = sizeof(HAL_DATA_TYPE);
 
-	pHalFunc->hal_power_on = rtl8188es_InitPowerOn;
+	pHalFunc->hal_power_on = InitPowerOn_rtl8188es;
+	pHalFunc->hal_power_off = hal_poweroff_rtl8188es;
+		
 	pHalFunc->hal_init = &rtl8188es_hal_init;
 	pHalFunc->hal_deinit = &rtl8188es_hal_deinit;
 
@@ -4179,8 +4190,8 @@ _func_enter_;
 	pHalFunc->enable_interrupt = &EnableInterrupt8188ESdio;
 	pHalFunc->disable_interrupt = &DisableInterrupt8188ESdio;
 
-#ifdef COWFIG_WOWLAN
-	pHalFunc->disable_interrupt = &ClearInterrupt8189ESdio;
+#ifdef CONFIG_WOWLAN
+	pHalFunc->clear_interrupt = &ClearInterrupt8189ESdio;
 #endif
 
 	pHalFunc->SetHwRegHandler = &SetHwReg8188ES;

@@ -45,6 +45,7 @@ CONFIG_FTP_PROTECT = n
 CONFIG_WOWLAN = n
 CONFIG_GPIO_WAKEUP = n
 CONFIG_ODM_ADAPTIVITY = n
+CONFIG_MMC_PM_KEEP_POWER = n
 
 CONFIG_PLATFORM_I386_PC = n
 CONFIG_PLATFORM_ANDROID_X86 = n
@@ -73,6 +74,7 @@ CONFIG_PLATFORM_MIPS_JZ4760 = n
 CONFIG_PLATFORM_DMP_PHILIPS = n
 CONFIG_PLATFORM_TI_DM365 = n
 CONFIG_PLATFORM_MSTAR_TITANIA12 = n
+CONFIG_PLATFORM_MSTAR = n
 CONFIG_PLATFORM_SZEBOOK = n
 CONFIG_PLATFORM_ARM_SUNxI = n
 CONFIG_PLATFORM_ARM_SUN6I = n
@@ -367,9 +369,14 @@ ifeq ($(CONFIG_ODM_ADAPTIVITY), y)
 EXTRA_CFLAGS += -DCONFIG_ODM_ADAPTIVITY
 endif
 
+ifeq ($(CONFIG_MMC_PM_KEEP_POWER), y)
+EXTRA_CFLAGS += -DCONFIG_MMC_PM_KEEP_POWER
+endif
+
 ifeq ($(CONFIG_RTL8188E), y)
 ifeq ($(CONFIG_WOWLAN), y)
 EXTRA_CFLAGS += -DCONFIG_WOWLAN
+EXTRA_CFLAGS += -DCONFIG_MMC_PM_KEEP_POWER
 endif
 ifeq ($(CONFIG_GPIO_WAKEUP), y)
 EXTRA_CFLAGS += -DCONFIG_GPIO_WAKEUP
@@ -413,11 +420,19 @@ ARCH := arm
 endif
 
 ifeq ($(CONFIG_PLATFORM_MSTAR_TITANIA12), y)
-EXTRA_CFLAGS += -DCONFIG_LITTLE_ENDIAN -DCONFIG_PLATFORM_MSTAR_TITANIA12
+EXTRA_CFLAGS += -DCONFIG_LITTLE_ENDIAN -DCONFIG_PLATFORM_MSTAR -DCONFIG_PLATFORM_MSTAR_TITANIA12
 ARCH:=mips
 CROSS_COMPILE:= /usr/src/Mstar_kernel/mips-4.3/bin/mips-linux-gnu-
 KVER:= 2.6.28.9
 KSRC:= /usr/src/Mstar_kernel/2.6.28.9/
+endif
+
+ifeq ($(CONFIG_PLATFORM_MSTAR), y)
+EXTRA_CFLAGS += -DCONFIG_LITTLE_ENDIAN -DCONFIG_PLATFORM_MSTAR
+ARCH:=arm
+CROSS_COMPILE:= /usr/src/bin/arm-none-linux-gnueabi-
+KVER:= 3.1.10
+KSRC:= /usr/src/Mstar_kernel/3.1.10/
 endif
 
 ifeq ($(CONFIG_PLATFORM_ANDROID_X86), y)
@@ -674,9 +689,11 @@ ifeq ($(CONFIG_SDIO_HCI), y)
 #EXTRA_CFLAGS += -DCONFIG_WITS_EVB_V13
 endif
 ARCH := arm
-CROSS_COMPILE := arm-none-linux-gnueabi-
+#CROSS_COMPILE := arm-none-linux-gnueabi-
+CROSS_COMPILE=/home/android_sdk/Allwinner/a10/android-jb42/lichee-jb42/buildroot/output/external-toolchain/bin/arm-none-linux-gnueabi-
 KVER  := 3.0.8
 #KSRC:= ../lichee/linux-3.0/
+KSRC=/home/android_sdk/Allwinner/a10/android-jb42/lichee-jb42/linux-3.0
 endif
 
 ifeq ($(CONFIG_PLATFORM_ARM_SUN6I), y)
@@ -707,7 +724,7 @@ endif
 
 ifeq ($(CONFIG_PLATFORM_ARM_SUN7I), y)
 EXTRA_CFLAGS += -DCONFIG_LITTLE_ENDIAN
-EXTRA_CFLAGS += -DCONFIG_PLATFORM_ARM_SUN6I
+EXTRA_CFLAGS += -DCONFIG_PLATFORM_ARM_SUN7I
 ifeq ($(CONFIG_USB_HCI), y)
 EXTRA_CFLAGS += -DCONFIG_USE_USB_BUFFER_ALLOC_TX
 endif
@@ -717,10 +734,16 @@ EXTRA_CFLAGS += -DCONFIG_CONCURRENT_MODE
 EXTRA_CFLAGS += -DCONFIG_IOCTL_CFG80211 -DRTW_USE_CFG80211_STA_EVENT
 EXTRA_CFLAGS += -DCONFIG_P2P_IPS -DCONFIG_QOS_OPTIMIZATION
 ARCH := arm
-CROSS_COMPILE := arm-none-linux-gnueabi-
-KVER  := 3.3.0
-#KSRC:= ../lichee/linux-3.3/
+# Cross compile setting for Android 4.2 SDK
+#CROSS_COMPILE := /home/android_sdk/Allwinner/a20/sugar/lichee/out/android/common/buildroot/external-toolchain/bin/arm-linux-gnueabi-
+#KVER  := 3.3.0
+#KSRC :=/home/android_sdk/Allwinner/a20/sugar/lichee/linux-3.3
+# Cross compile setting for Android 4.3 SDK
+CROSS_COMPILE := /home/android_sdk/Allwinner/a20/android-jb43/lichee/out/android/common/buildroot/external-toolchain/bin/arm-linux-gnueabi-
+KVER  := 3.4.39
+KSRC :=/home/android_sdk/Allwinner/a20/android-jb43/lichee/linux-3.4
 endif
+
 
 ifeq ($(CONFIG_PLATFORM_ACTIONS_ATV5201), y)
 EXTRA_CFLAGS += -DCONFIG_LITTLE_ENDIAN -DCONFIG_PLATFORM_ACTIONS_ATV5201

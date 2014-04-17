@@ -838,20 +838,11 @@ static int recvbuf2recvframe(_adapter *padapter, struct recv_buf *precvbuf)
 		update_recvframe_attrib_88e(precvframe, prxstat);
 
 		pattrib = &precvframe->u.hdr.attrib;
+				
+		if ((padapter->registrypriv.mp_mode == 0) &&((pattrib->crc_err) || (pattrib->icv_err)))
+		{		
+			DBG_8192C("%s: RX Warning! crc_err=%d icv_err=%d, skip!\n", __FUNCTION__, pattrib->crc_err, pattrib->icv_err);
 		
-#ifdef CONFIG_SPECIAL_SETTING_FOR_FUNAI_TV			
-		//if(pattrib->pkt_len>2000){
-		//	printk("%s: RX Warning!pkt_len= %d, data rate=0x%02x \n", __FUNCTION__,pattrib->pkt_len,pattrib->mcs_rate);	
-		//}
-#endif					
-		if ((pattrib->crc_err) || (pattrib->icv_err))
-		{
-			if (padapter->registrypriv.mp_mode == 0)
-				DBG_8192C("%s: RX Warning! crc_err=%d icv_err=%d, skip!\n", __FUNCTION__, pattrib->crc_err, pattrib->icv_err);
-#ifdef CONFIG_SPECIAL_SETTING_FOR_FUNAI_TV		
-				printk("%s: RX Warning!pkt_len= %d, data rate=0x%02x \n", __FUNCTION__,pattrib->pkt_len,pattrib->mcs_rate);
-#endif
-			
 			rtw_free_recvframe(precvframe, pfree_recv_queue);
 			goto _exit_recvbuf2recvframe;
 		}
@@ -917,7 +908,7 @@ static int recvbuf2recvframe(_adapter *padapter, struct recv_buf *precvbuf)
 		else
 		{
 			DBG_8192C("recvbuf2recvframe:can not allocate memory for skb copy\n");
-			//precvframe->u.hdr.pkt = skb_clone(pskb, GFP_ATOMIC);
+			//precvframe->u.hdr.pkt = rtw_skb_clone(pskb);
 			//precvframe->u.hdr.rx_head = precvframe->u.hdr.rx_data = precvframe->u.hdr.rx_tail = pbuf;
 			//precvframe->u.hdr.rx_end = pbuf + (pkt_offset>1612?pkt_offset:1612);
 
@@ -1244,9 +1235,8 @@ static int recvbuf2recvframe(_adapter *padapter, _pkt *pskb)
 
 		pattrib = &precvframe->u.hdr.attrib;		
 				
-		if ((pattrib->crc_err) || (pattrib->icv_err))
-		{
-			if (padapter->registrypriv.mp_mode == 0)
+		if ((padapter->registrypriv.mp_mode == 0) &&((pattrib->crc_err) || (pattrib->icv_err)))
+		{			
 			DBG_8192C("%s: RX Warning! crc_err=%d icv_err=%d, skip!\n", __FUNCTION__, pattrib->crc_err, pattrib->icv_err);
 
 			rtw_free_recvframe(precvframe, pfree_recv_queue);

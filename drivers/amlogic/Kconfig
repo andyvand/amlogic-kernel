@@ -48,7 +48,7 @@ source "drivers/amlogic/wifi/rtl8xxx_EU/Kconfig"
 source "drivers/amlogic/wifi/rtl8xxx_EU_MP/Kconfig"
 source "drivers/amlogic/wifi/rtl8xxx_CU/Kconfig"
 source "drivers/amlogic/wifi/rtl8xxx_DU/Kconfig"
-isource "../hardware/wifi/realtek/drivers/8192eu/rtl8192EU/Kconfig"
+source "drivers/amlogic/wifi/rtl8192_EU/Kconfig"
 source "drivers/amlogic/bluetooth/Kconfig"
 source "drivers/amlogic/nfc/Kconfig"
 

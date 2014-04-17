@@ -66,9 +66,7 @@ obj-$(CONFIG_AML_RTC)+= rtc/
 obj-y += power/
 
 obj-y += tvin_v4l2/
-ifneq ($(wildcard $(srctree)/../hardware/tvin),)
-	obj-$(CONFIG_TVIN) += ../../../hardware/tvin/
-endif
+obj-$(CONFIG_TVIN) += tvin/
 
 obj-y += thermal/
 

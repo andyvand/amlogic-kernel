@@ -11,11 +11,10 @@
 # Set default configuration to use, if Makefile didn't provide one.
 # Change this to use a different config.h
 CONFIG ?= aml-meson-m400-1
+TARGET_PLATFORM ?= aml-meson
 
 ifneq ($(KBUILD_SRC),)
-	ifneq ($(wildcard $(KBUILD_SRC)/$(src)),)
-		TOP_KBUILD_SRC := $(KBUILD_SRC)/
-	endif
+TOP_KBUILD_SRC := $(KBUILD_SRC)/
 endif
 
 # Validate selected config
@@ -32,13 +31,12 @@ endif
 UDD_FILE_PREFIX = ../mali/
 
 # Get subversion revision number, fall back to 0000 if no svn info is available
-SVN_REV := $(shell ((svnversion | grep -Eqv "exported|Unversioned directory" && echo -n 'Revision: ' && svnversion) || git svn info | sed -e 's/$$$$/M/' | grep '^Revision: ' || echo ${MALI_RELEASE_NAME}) 2>/dev/null | sed -e 's/^Revision: //')
-
+SVN_REV := $(shell ((svnversion | grep -qv exported && echo -n 'Revision: ' && svnversion) || git svn info | sed -e 's/$$$$/M/' | grep '^Revision: ' || echo ${MALI_RELEASE_NAME}) 2>/dev/null | sed -e 's/^Revision: //')
+SVN_REV = 0000
 ccflags-y += -DSVN_REV=$(SVN_REV)
 ccflags-y += -DSVN_REV_STRING=\"$(SVN_REV)\"
 
 ccflags-y += -I$(src) -I$(TOP_KBUILD_SRC)$(src)/common -I$(TOP_KBUILD_SRC)$(src)/linux -I$(TOP_KBUILD_SRC)$(src)/../mali/common -I$(src)/../mali/linux -I$(src)/../ump/include/ump
-ccflags-y += -I$(srctree)/drivers/staging/android
 ccflags-y += -DMALI_STATE_TRACKING=0
 ccflags-$(CONFIG_UMP_DEBUG) += -DDEBUG
 

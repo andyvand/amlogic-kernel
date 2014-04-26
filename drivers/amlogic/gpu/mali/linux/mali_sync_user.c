@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2013 ARM Limited. All rights reserved.
+ * Copyright (C) 2012 ARM Limited. All rights reserved.
  * 
  * This program is free software and is provided to you under the terms of the GNU General Public License version 2
  * as published by the Free Software Foundation, and any use by you of this program is subject to the terms of such GNU licence.
@@ -67,7 +67,7 @@ _mali_osk_errcode_t mali_stream_create(const char * name, int *out_fd)
 	}
 }
 
-static mali_sync_pt *mali_stream_create_point_internal(int tl_fd, mali_bool timed)
+mali_sync_pt *mali_stream_create_point(int tl_fd)
 {
 	struct sync_timeline *tl;
 	struct sync_pt * pt;
@@ -85,15 +85,7 @@ static mali_sync_pt *mali_stream_create_point_internal(int tl_fd, mali_bool time
 
 	tl = tl_file->private_data;
 
-	if (unlikely(timed))
-	{
-		pt = mali_sync_timed_pt_alloc(tl);
-	}
-	else
-	{
-		pt = mali_sync_pt_alloc(tl);
-	}
-
+	pt = mali_sync_pt_alloc(tl);
 	if (!pt)
 	{
 		pt = NULL;
@@ -104,11 +96,6 @@ out:
 	fput(tl_file);
 
 	return pt;
-}
-
-mali_sync_pt *mali_stream_create_point(int tl_fd)
-{
-	return mali_stream_create_point_internal(tl_fd, MALI_FALSE);
 }
 
 int mali_stream_create_fence(mali_sync_pt *pt)
@@ -127,14 +114,6 @@ int mali_stream_create_fence(mali_sync_pt *pt)
 	}
 
 	/* create a fd representing the fence */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,6,0)
-	fd = get_unused_fd_flags(O_CLOEXEC);
-	if (fd < 0)
-	{
-		sync_fence_put(fence);
-		goto out;
-	}
-#else
 	fd = get_unused_fd();
 	if (fd < 0)
 	{
@@ -151,26 +130,11 @@ int mali_stream_create_fence(mali_sync_pt *pt)
 	FD_SET(fd, fdt->close_on_exec);
 #endif
 	spin_unlock(&files->file_lock);
-#endif /* Linux > 3.6 */
 
 	/* bind fence to the new fd */
 	sync_fence_install(fence, fd);
 
 out:
-	return fd;
-}
-
-int mali_stream_create_empty_fence(int tl_fd)
-{
-	int fd;
-	mali_sync_pt *pt;
-
-	pt = mali_stream_create_point_internal(tl_fd, MALI_TRUE);
-
-	if (NULL == pt) return -ENOMEM;
-
-	fd = mali_stream_create_fence(pt);
-
 	return fd;
 }
 

@@ -150,6 +150,9 @@ static struct early_suspend hdmitx_early_suspend_handler = {
     /* unplug powerdown */
 #define INIT_FLAG_POWERDOWN      0x2
 
+// HDMI CEC Function Flag
+#define INIT_FLAG_CEC_FUNC       0x4
+
 #define INIT_FLAG_NOT_LOAD 0x80
 
 int hdmi_ch = 0;
@@ -158,7 +161,8 @@ int hdmi_ch = 0;
 static unsigned char init_flag=INIT_FLAG_POWERDOWN;
 static unsigned char init_powermode=0x80;
 #else
-static unsigned char init_flag=0;
+static unsigned char init_flag=INIT_FLAG_CEC_FUNC;
+extern unsigned char uboot_vmode_flag = 0;
 static unsigned char init_powermode=0;
 #endif
 #undef DISABLE_AUDIO
